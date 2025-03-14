@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gioco delle Parole</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="menu">
+        <h1>Gioco delle Parole</h1>
+        <label for="difficulty">Seleziona la difficoltà:</label>
+        <select id="difficulty">
+            <option value="2500">Facile (2.5s)</option>
+            <option value="1500">Medio (1.5s)</option>
+            <option value="1000">Difficile (1s)</option>
+        </select>
+        
+        <input type="file" id="fileInput" accept=".txt">
+        <button id="startButton">Inizia</button>
+    </div>
+
+    <div id="game" class="hidden">
+        <h2 id="wordDisplay"></h2>
+        <input type="text" id="userInput" placeholder="Scrivi qui..." autocomplete="off">
+        <button id="submitButton">Invia</button>
+        <p id="feedback"></p>
+        <p>Punteggio: <span id="score">0</span>/10</p>
+        <button id="backButton">Torna al menu</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -3,31 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gioco delle Parole</title>
+    <title>WordFlash</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <div id="menu">
-        <h1>Gioco delle Parole</h1>
-        <label for="difficulty">Seleziona la difficoltà:</label>
+    <!-- Sezione caricamento -->
+    <div id="load-screen" class="screen active">
+        <h1>WordFlash</h1>
+        <input type="file" id="file-input" accept=".txt">
         <select id="difficulty">
-            <option value="2500">Facile (2.5s)</option>
-            <option value="1500">Medio (1.5s)</option>
-            <option value="1000">Difficile (1s)</option>
+            <option value="easy">Facile</option>
+            <option value="medium">Medio</option>
+            <option value="hard">Difficile</option>
         </select>
-        
-        <input type="file" id="fileInput" accept=".txt">
-        <button id="startButton">Inizia</button>
+        <button id="start-btn">Inizia</button>
     </div>
 
-    <div id="game" class="hidden">
-        <h2 id="wordDisplay"></h2>
-        <input type="text" id="userInput" placeholder="Scrivi qui..." autocomplete="off">
-        <button id="submitButton">Invia</button>
-        <p id="feedback"></p>
-        <p>Punteggio: <span id="score">0</span>/10</p>
-        <button id="backButton">Torna al menu</button>
+    <!-- Schermata di gioco -->
+    <div id="game-screen" class="screen">
+        <p id="timer">Tempo rimanente: 20:00</p>
+        <p id="ready-text">Sei pronto?</p>
+        <button id="go-btn">Via</button>
+        <h2 id="word-display" class="hidden"></h2>
+        <input type="text" id="answer-input" placeholder="Scrivi qui" disabled>
+        <button id="submit-btn" disabled>Invia</button>
+        <button id="replay-btn" disabled>Rivedi (1 volta)</button>
+        <p id="score">Punteggio: 0</p>
+        <p id="feedback" class="hidden"></p>
+        <div id="comparison" class="hidden"></div>
+        <div id="ball-game" class="hidden">
+            <p id="ball-target">Prendi X palline di colore Y</p>
+            <p id="ball-count">Palline prese: 0/X</p>
+            <div id="ball-container"></div>
+        </div>
     </div>
 
     <script src="script.js"></script>

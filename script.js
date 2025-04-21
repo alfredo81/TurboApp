@@ -16,18 +16,22 @@ const ballGame = document.getElementById('ball-game');
 const ballContainer = document.getElementById('ball-container');
 const ballCountDisplay = document.getElementById('ball-count');
 const ballTargetDisplay = document.getElementById('ball-target');
+const statsDisplay = document.getElementById('stats');
 
 let wordList = [];
 let currentIndex = 0;
 let score = 0;
+let correctAnswers = 0;
+let wrongAnswers = 0;
 let difficultyTime = 0;
 let replayUsed = false;
-let timeLeft = 20 * 60; // 20 minuti in secondi
+let timeLeft = 15 * 60; // 15 minuti in secondi
 let timerInterval = null;
 let ballsCaught = 0;
 let targetColor = '';
-let targetCount = 0;
+let targetCount = 5; // Fissato a 5
 let ballAnimationFrame = null;
+let ballElements = []; // Array globale per le palline
 
 startBtn.addEventListener('click', startGame);
 goBtn.addEventListener('click', showNextItem);
@@ -35,9 +39,7 @@ submitBtn.addEventListener('click', checkAnswer);
 replayBtn.addEventListener('click', replayItem);
 
 answerInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && !submitBtn.disabled) {
-        checkAnswer();
-    }
+    if (e.key === 'Enter' && !submitBtn.disabled) checkAnswer();
 });
 
 function startGame() {
@@ -70,7 +72,9 @@ function shuffleArray(array) {
 function resetGame() {
     currentIndex = 0;
     score = 0;
-    timeLeft = 20 * 60;
+    correctAnswers = 0;
+    wrongAnswers = 0;
+    timeLeft = 15 * 60;
     scoreDisplay.textContent = `Punteggio: ${score}`;
     timerDisplay.textContent = `Tempo rimanente: ${formatTime(timeLeft)}`;
     goBtn.classList.remove('hidden');
@@ -81,6 +85,7 @@ function resetGame() {
     feedbackDisplay.classList.add('hidden');
     comparisonDisplay.classList.add('hidden');
     ballGame.classList.add('hidden');
+    statsDisplay.classList.add('hidden');
     answerInput.disabled = true;
     submitBtn.disabled = true;
     replayBtn.disabled = true;
@@ -171,10 +176,13 @@ function checkAnswer() {
 
     if (userAnswerNormalized === correctAnswerNormalized) {
         score += 1;
+        correctAnswers += 1;
         feedbackDisplay.textContent = 'Ben fatto!!';
         feedbackDisplay.style.color = 'green';
         comparisonDisplay.classList.add('hidden');
     } else {
+        score -= 1;
+        wrongAnswers += 1;
         feedbackDisplay.textContent = 'Peccato, riprova';
         feedbackDisplay.style.color = 'red';
         showComparison(userAnswer, correctAnswer);
@@ -225,7 +233,7 @@ function startBallGame() {
     ballsCaught = 0;
     const colors = ['red', 'blue', 'green', 'yellow'];
     targetColor = colors[Math.floor(Math.random() * colors.length)];
-    targetCount = Math.floor(Math.random() * 6) + 5; // Da 5 a 10
+    targetCount = 5; // Numero fisso di palline da prendere
     ballTargetDisplay.textContent = `Prendi ${targetCount} palline di colore ${targetColor === 'red' ? 'rosso' : targetColor === 'blue' ? 'blu' : targetColor === 'green' ? 'verde' : 'giallo'}`;
     ballCountDisplay.textContent = `Palline prese: ${ballsCaught}/${targetCount}`;
     ballGame.classList.remove('hidden');
@@ -235,17 +243,16 @@ function startBallGame() {
     replayBtn.classList.add('hidden');
     feedbackDisplay.classList.add('hidden');
     comparisonDisplay.classList.add('hidden');
+    ballElements = []; // Resetta l'array delle palline
     animateBalls();
 }
 
 function animateBalls() {
     ballContainer.innerHTML = '';
-    const ballElements = [];
-    const colors = ['red', 'blue', 'green', 'yellow'];
+    const colors = ['red', 'blue', 'green', 'yellow'].filter(color => color !== targetColor); // Escludi il colore target per le altre palline
 
-    // Crea 3 palline iniziali, almeno 1 del colore target
-    for (let i = 0; i < 3; i++) {
-        const color = i === 0 ? targetColor : colors[Math.floor(Math.random() * colors.length)];
+    // Funzione per creare una pallina
+    function createBall(color) {
         const ball = document.createElement('div');
         ball.classList.add('ball');
         ball.style.backgroundColor = color;
@@ -257,6 +264,13 @@ function animateBalls() {
         ballElements.push({ element: ball, top: -30 });
     }
 
+    // Crea 3 palline iniziali, con almeno 1 del colore target
+    createBall(targetColor); // Prima pallina sempre del colore target
+    for (let i = 1; i < 3; i++) {
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        createBall(color);
+    }
+
     function updateBalls(timestamp) {
         ballElements.forEach((ball, index) => {
             ball.top += 2; // Velocità di caduta
@@ -265,19 +279,17 @@ function animateBalls() {
             if (ball.top >= ballContainer.offsetHeight - 30) { // Raggiunge il fondo
                 ball.element.remove();
                 ballElements.splice(index, 1);
-                const newBall = document.createElement('div');
-                newBall.classList.add('ball');
-                // Nuova pallina con colore casuale, garantendo il target
-                const color = Math.random() < 0.5 ? targetColor : colors[Math.floor(Math.random() * colors.length)];
-                newBall.style.backgroundColor = color;
-                newBall.dataset.color = color;
-                newBall.style.left = `${Math.random() * (ballContainer.offsetWidth - 30)}px`;
-                newBall.style.top = '-30px';
-                newBall.addEventListener('click', () => catchBall(newBall));
-                ballContainer.appendChild(newBall);
-                ballElements.push({ element: newBall, top: -30 });
+                // Aggiungi una nuova pallina (50% target, 50% altro colore)
+                const newColor = ballElements.length === 0 || Math.random() < 0.5 ? targetColor : colors[Math.floor(Math.random() * colors.length)];
+                createBall(newColor);
             }
         });
+
+        // Assicurati che ci siano sempre 3 palline
+        while (ballElements.length < 3) {
+            const newColor = ballElements.every(b => b.element.dataset.color !== targetColor) ? targetColor : colors[Math.floor(Math.random() * colors.length)];
+            createBall(newColor);
+        }
 
         ballAnimationFrame = requestAnimationFrame(updateBalls);
     }
@@ -290,21 +302,11 @@ function catchBall(ball) {
         ball.remove();
         ballsCaught++;
         ballCountDisplay.textContent = `Palline prese: ${ballsCaught}/${targetCount}`;
+        const index = ballElements.findIndex(b => b.element === ball);
+        if (index !== -1) ballElements.splice(index, 1);
         if (ballsCaught >= targetCount) {
             endBallGame();
         }
-        // Sostituisci con una nuova pallina casuale
-        const colors = ['red', 'blue', 'green', 'yellow'];
-        const newBall = document.createElement('div');
-        newBall.classList.add('ball');
-        const newColor = Math.random() < 0.5 ? targetColor : colors[Math.floor(Math.random() * colors.length)];
-        newBall.style.backgroundColor = newColor;
-        newBall.dataset.color = newColor;
-        newBall.style.left = `${Math.random() * (ballContainer.offsetWidth - 30)}px`;
-        newBall.style.top = '-30px';
-        newBall.addEventListener('click', () => catchBall(newBall));
-        ballContainer.appendChild(newBall);
-        ballElements.push({ element: newBall, top: -30 });
     }
 }
 
@@ -319,16 +321,16 @@ function endBallGame() {
 function endGame() {
     clearInterval(timerInterval);
     cancelAnimationFrame(ballAnimationFrame);
-    let message = `Tempo scaduto! Punteggio finale: ${score}`;
-    if (score > 40) {
-        message += ' - Sei un supereroe!';
-    } else if (score > 30) {
-        message += ' - Sei un campione!';
-    } else if (score > 20) {
-        message += ' - Ben fatto!! Prova superata';
-    }
-    wordDisplay.textContent = message;
-    wordDisplay.classList.remove('hidden');
+    let message = `Tempo scaduto!<br>Punteggio totale: ${score}<br>Risposte corrette: ${correctAnswers}<br>Risposte sbagliate: ${wrongAnswers}`;
+    if (score > 60) message += '<br>Sei un supereroe!';
+    else if (score > 50) message += '<br>Sei un campione!';
+    else if (score > 40) message += '<br>Sei un grande!';
+    else if (score > 30) message += '<br>Ottimo!';
+    else if (score > 20) message += '<br>Ben fatto!! Prova superata';
+    statsDisplay.innerHTML = message;
+    statsDisplay.classList.remove('hidden');
+    goBtn.classList.add('hidden');
+    wordDisplay.classList.add('hidden');
     answerInput.classList.add('hidden');
     submitBtn.classList.add('hidden');
     replayBtn.classList.add('hidden');
